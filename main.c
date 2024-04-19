@@ -30,11 +30,11 @@ int main(int argc, char *argv[]){
 
 	// Setting window attributes
 	XSetWindowAttributes winAttr;
-	// winAttr.bit_gravity = StaticGravity;
+	winAttr.bit_gravity = StaticGravity;
 	winAttr.background_pixel = 0;
 	winAttr.colormap = XCreateColormap(dsp, root, visInfo.visual, AllocNone);
 	winAttr.event_mask = StructureNotifyMask | KeyPressMask;
-	unsigned long attrMask = CWColormap | /* CWBitGravity | */ CWBackPixel | CWEventMask;
+	unsigned long attrMask = CWColormap | CWBitGravity | CWBackPixel | CWEventMask;
 
 	// Making the window
 	Window window = XCreateWindow(dsp, root, 0, 0, width, height, 0, visInfo.depth, InputOutput, visInfo.visual, attrMask, &winAttr);
@@ -68,15 +68,10 @@ int main(int argc, char *argv[]){
 
 	unsigned int score = 0;
 	char score_buf[11];
-	XFontStruct* font = XLoadQueryFont(dsp, "fixed");
-	XCharStruct overall;
-	int direction, ascent, descent;
-	XTextExtents(font, score_buf, strlen(score_buf), &direction, &ascent, &descent, &overall);
-	XSetFont(dsp, gc, font->fid);
 
 	int winOpen = 1;
+	int gameOver = 0;
 	while(winOpen){
-
 		if(ball.x >= width - ball.radius || ball.x < 0)
 			pong_ball_reflect(&ball, 'x');
 		if(ball.y >= height - ball.radius || ball.y < 0)
@@ -87,12 +82,13 @@ int main(int argc, char *argv[]){
 				ball.vy *= -1;
 				snprintf(score_buf, sizeof score_buf, "%u", ++score);
 			}
-			if((score + 1) % 50 == 0){
-				ball.vx++;
-				ball.vy++;
+			if((score + 1) % 25 == 0){
+				ball.vx += 2;
+				ball.vy += 2;
 			}
 		}
-		// if(ball.y >= height - ball.radius)
+		if(ball.y >= height - ball.radius)
+			gameOver = 1;
 		// if(ball.y <= paddle.y - 10 && (ball.x > paddle.x && ball.x < paddle.x + paddle.width)) // For cheat mode
 		XFillArc(dsp, window, gc, ball.x, ball.y, ball.radius, ball.radius, 0, 360*64);
 		XDrawRectangle(dsp, window, gc, paddle.x, paddle.y, paddle.width, 0);
